@@ -1,0 +1,13 @@
+sentence-transformers
+faiss-cpu
+qdrant-client
+hf_xet
+fitz 
+RecursiveCharacterTextSplitter
+pdfplumber
+openai
+langchain
+fastapi
+uvicorn
+fastapi-cors
+python-dotenv
