@@ -8,7 +8,7 @@ import os
 import docx
 
 # ---- Page Config ----
-st.set_page_config(page_title="My OpenAI-Bot", page_icon="🤖", layout="wide")
+st.set_page_config(page_title="IndraAI", page_icon="🤖", layout="wide")
 
 # ---- Session State ----
 if "messages" not in st.session_state:
@@ -24,102 +24,178 @@ if "last_uploaded_name" not in st.session_state:
 if "show_uploader" not in st.session_state:
     st.session_state.show_uploader = False
 
-# ---- Sidebar ----
-with st.sidebar:
-    st.markdown("<h2 style='color:white;'>📚 OpenAI Chatbot</h2>", unsafe_allow_html=True)
-    if st.button("➕ New Chat"):
-        if st.session_state.messages:
-            st.session_state.history.append(st.session_state.messages.copy())
-        st.session_state.messages = []
-    st.markdown("### 🔍 Chat History")
-    for i, chat in enumerate(st.session_state.history):
-        st.markdown(f"**Chat {i+1}:** {len(chat)} messages")
-
-# ---- Main UI ----
-st.markdown("<h1 style='text-align:left;'>🤖 My OpenAI Chatbot</h1>", unsafe_allow_html=True)
-st.caption("Ask questions. Upload documents. Get AI-powered answers.")
-
-# ---- CSS for Floating Chat Bar ----
+# ---- CSS (UI Styling) ----
 st.markdown("""
 <style>
-.chatbar-wrap {
-    position: fixed;
-    bottom: 15px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 100%;
+body, .stApp {
+    background: linear-gradient(135deg, #d5c9ff 0%, #fbc2eb 100%);
+    font-family: 'Segoe UI', sans-serif;
+    color: #2c2c2c;
+}
+
+/* Header */
+.header {
     display: flex;
-    justify-content: center;
-    z-index: 999;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 50px;
+    background: white;
+    border-radius: 50px;
+    margin: 10px 40px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
-.chatbar {
-    width: min(900px, 92vw);
+.logo { font-size: 22px; font-weight: bold; color: #6A0DAD; }
+.menu a {
+    margin: 0 15px;
+    color: #333;
+    text-decoration: none;
+    font-weight: 500;
 }
-.chat-row {
-    background:#2c2c2c;
-    border-radius:26px;
-    padding:6px 10px;
-    display:flex;
-    align-items:center;
-    gap:10px;
+.menu a:hover { color: #6A0DAD; }
+.start-btn {
+    background: #A020F0;
+    color: white;
+    padding: 8px 22px;
+    border-radius: 30px;
+    font-weight: 600;
+    border: none;
 }
-            
+.start-btn:hover { background: #6A0DAD; }
+
+/* Hero */
+.hero {
+    text-align: center;
+    margin-top: 40px;
+}
+.hero h1 {
+    font-size: 42px;
+    font-weight: bold;
+    line-height: 1.3;
+}
+.hero h1 span {
+    color: #6A0DAD;
+}
+.hero p {
+    margin-top: 15px;
+    font-size: 18px;
+    color: #444;
+}
+
+/* Chat Box */
+.chat-box {
+    background: white;
+    border-radius: 16px;
+    padding: 12px 16px;
+    width: 600px;
+    max-width: 92%;
+    margin: 30px auto 10px auto;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    border: 2px solid #6A0DAD;
+}
+.chat-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 16px;
+    padding: 6px;
+}
+.chat-send {
+    background: #6A0DAD;
+    border: none;
+    color: white;
+    padding: 10px;
+    border-radius: 12px;
+    cursor: pointer;
+}
+.chat-send:hover { background: #A020F0; }
+
+/* Upload button */
 .plus-btn {
     width:36px; height:36px; border-radius:50%;
-    border:1px solid #555; background:#2c2c2c;
-    color:white; font-size:20px; cursor:pointer;
+    border:1px solid #6A0DAD;
+    background:#6A0DAD;
+    color:white; font-size:18px; cursor:pointer;
+    margin-right:8px;
 }
-.plus-btn:hover { border-color:#10a37f; color:#10a37f; }
-input.chat-input {
-    background:transparent; border:none; outline:none;
-    color:#fff; width:100%; font-size:16px; padding:8px 6px;
+.plus-btn:hover { background:#A020F0; }
+
+/* Disclaimer */
+.disclaimer {
+    text-align:center;
+    color:#444;
+    margin-top:12px;
+    font-size:13px;
 }
-button.kbd-send {
-    width:40px; height:40px; border-radius:50%;
-    border:1px solid #555; background:transparent;
-    color:#ddd; cursor:pointer;
+
+/* Chat bubbles */
+.user-bubble {
+    background:#222; color:white; padding:10px;
+    border-radius:8px; margin:10px auto; width:600px; max-width:92%;
 }
-button.kbd-send:hover { border-color:#10a37f; color:#10a37f; }
-.disclaimer { text-align:center; color:#9aa0a6; margin-top:10px; font-size:13px; }
+.ai-bubble {
+    background:#f4f4f9; color:black; padding:12px;
+    border-radius:8px; margin:10px auto 20px auto;
+    width:600px; max-width:92%;
+}
 </style>
 """, unsafe_allow_html=True)
 
-# ---- Display Chat History ----
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
+# ---- Header ----
+st.markdown("""
+<div class="header">
+  <div class="logo">IndraAI</div>
+  <div class="menu">
+    <a href="#">Product</a>
+    <a href="#">Resources</a>
+    <a href="#">Pricing</a>
+    <a href="#">Enterprise</a>
+  </div>
+  <button class="start-btn">Start Building</button>
+</div>
+""", unsafe_allow_html=True)
 
-# Load embedding model
+# ---- Hero Section ----
+st.markdown("""
+<div class="hero">
+  <h1>Where Curiosity Finds <span>Clarity</span></h1>
+  <p>Upload documents, search knowledge, and chat with IndraAI seamlessly.</p>
+</div>
+""", unsafe_allow_html=True)
+
+# ---- Display Chat ABOVE Search Bar ----
+if st.session_state.messages:
+    for msg in st.session_state.messages[::-1]:  # latest first
+        if msg["role"] == "user":
+            st.markdown(f"<div class='user-bubble'><b>You asked:</b> {msg['content']}</div>", unsafe_allow_html=True)
+        elif msg["role"] == "assistant":
+            st.markdown(f"<div class='ai-bubble'><b>IndraAI:</b> {msg['content']}</div>", unsafe_allow_html=True)
+    st.markdown("<hr>", unsafe_allow_html=True)
+
+# ---- Load embedding model ----
 model = load_embedding_model()
 
-# ---- Floating Chat Bar ----
-with st.container():
-    st.markdown('<div class="chatbar-wrap"><div class="chatbar">', unsafe_allow_html=True)
-    with st.form("chat_form", clear_on_submit=True):
-        c1, c2, c3 = st.columns([0.08, 0.84, 0.08])
-        
-        # Plus Button to toggle uploader
-        with c1:
-            plus_clicked = st.form_submit_button("+", use_container_width=True)
-            if plus_clicked:
-                st.session_state.show_uploader = not st.session_state.show_uploader
-
-        with c2:
-            user_query = st.text_input("", placeholder="Ask your question...", key="chat_text", label_visibility="collapsed")
-        
-        with c3:
-            submitted = st.form_submit_button("➤", use_container_width=True)
-            st.markdown(
-                "<script>document.querySelectorAll('button[kind=\"secondary\"]')?.forEach(b=>{b.classList.add('kbd-send')})</script>",
-                unsafe_allow_html=True
-            )
+# ---- Chat Box ----
+with st.form("chat_form", clear_on_submit=True):
+    c1, c2, c3 = st.columns([0.1, 0.75, 0.15])
     
-    st.markdown('<div class="disclaimer">My OpenAI-Bot can make mistakes. Check important info.</div>', unsafe_allow_html=True)
-    st.markdown("</div></div>", unsafe_allow_html=True)
+    with c1:
+        plus_clicked = st.form_submit_button("+")
+        if plus_clicked:
+            st.session_state.show_uploader = not st.session_state.show_uploader
 
-# Show uploader below chat bar if toggled
+    with c2:
+        user_query = st.text_input("", placeholder="Ask your question...", key="chat_text", label_visibility="collapsed")
+
+    with c3:
+        submitted = st.form_submit_button("➤")
+
+st.markdown('<div class="disclaimer">IndraAI can make mistakes. Check important info.</div>', unsafe_allow_html=True)
+
+# ---- Show uploader if toggled ----
 if st.session_state.show_uploader:
-    uploader = st.file_uploader("Choose a file", type=["pdf", "txt", "docx"])
+    uploader = st.file_uploader("Upload a file", type=["pdf", "txt", "docx"])
 else:
     uploader = None
 
@@ -176,6 +252,3 @@ if submitted and user_query.strip():
 
     answer = generate_answer(user_query, context_docs if context_docs else ["No extra context found. Answer briefly."])
     st.session_state.messages.append({"role": "assistant", "content": answer})
-
-    with st.chat_message("assistant"):
-        st.markdown(answer)
